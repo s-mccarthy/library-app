@@ -134,5 +134,6 @@
 
 	<modules>
 		<module>library-dao</module>
+		<module>library-business-services</module>
 	</modules>
 </project>
