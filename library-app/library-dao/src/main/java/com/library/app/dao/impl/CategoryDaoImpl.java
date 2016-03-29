@@ -26,12 +26,12 @@ public class CategoryDaoImpl implements CategoryDao {
 
 	@Override
 	public CategoryDTO findById(final Long id) {
-		if (id == null) {
+		if (id == null)
 			return null;
-		}
+
 		Category category = em.find(Category.class, id);
 
-		return category.getCategory();
+		return null == category ? null : category.getCategory();
 	}
 
 	@Override

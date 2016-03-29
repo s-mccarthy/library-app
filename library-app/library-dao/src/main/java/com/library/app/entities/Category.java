@@ -26,6 +26,8 @@ public class Category implements Serializable {
 	}
 
 	public Category(final CategoryDTO category) {
+		if (null != category.getId())
+			setId(category.getId());
 		setName(category.getName());
 	}
 
