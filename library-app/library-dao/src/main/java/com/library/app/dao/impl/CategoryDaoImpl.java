@@ -14,7 +14,7 @@ import com.library.app.entities.Category;
 public class CategoryDaoImpl implements CategoryDao {
 
 	@PersistenceContext
-	EntityManager em;
+	public EntityManager em;
 
 	@Override
 	public CategoryDTO add(final CategoryDTO categoryDto) {

@@ -6,6 +6,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.library.app.dto.AuthorDTO;
+
 @Entity
 @Table(name = "AUTHOR", schema = "LIBRARY")
 public class Author implements Serializable {
@@ -22,8 +24,14 @@ public class Author implements Serializable {
 	public Author() {
 	}
 
-	public Author(final String name) {
-		this.name = name;
+	public Author(final AuthorDTO authorDto) {
+		setName(authorDto.getName());
+	}
+
+	public AuthorDTO getAuthorDto() {
+		AuthorDTO author = new AuthorDTO(getId(), getName());
+
+		return author;
 	}
 
 	public Long getId() {

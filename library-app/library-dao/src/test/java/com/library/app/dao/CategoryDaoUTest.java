@@ -10,12 +10,14 @@ import javax.persistence.*;
 
 import org.junit.*;
 
+import com.library.app.dao.impl.CategoryDaoImpl;
+import com.library.app.dto.CategoryDTO;
 import com.library.app.utils.DBCommandTransactionalExecutor;
 
-public class CategoryRepositoryUTest {
+public class CategoryDaoUTest {
 	private EntityManagerFactory emf;
 	private EntityManager em;
-	private CategoryDao categoryRepository;
+	private CategoryDaoImpl categoryDao;
 	private DBCommandTransactionalExecutor dBCommandTransactionalExecutor;
 
 	@Before
@@ -23,8 +25,8 @@ public class CategoryRepositoryUTest {
 		emf = Persistence.createEntityManagerFactory("libraryPU");
 		em = emf.createEntityManager();
 
-		categoryRepository = new CategoryRepository();
-		categoryRepository.em = em;
+		categoryDao = new CategoryDaoImpl();
+		categoryDao.em = em;
 
 		dBCommandTransactionalExecutor = new DBCommandTransactionalExecutor(em);
 	}
@@ -38,55 +40,55 @@ public class CategoryRepositoryUTest {
 	@Test
 	public void addCategoryAndFindIt() {
 		final Long categoryAddedId = dBCommandTransactionalExecutor.executeCommand(() -> {
-			return categoryRepository.add(java()).getId();
+			return categoryDao.add(java()).getId();
 		});
 
 		assertThat(categoryAddedId, is(notNullValue()));
 
-		final Category category = categoryRepository.findById(categoryAddedId);
+		final CategoryDTO category = categoryDao.findById(categoryAddedId);
 		assertThat(category, is(notNullValue()));
 		assertThat(category.getName(), is(equalTo(java().getName())));
 	}
 
 	@Test
 	public void findCategoryByIdNotFound() {
-		final Category category = categoryRepository.findById(999L);
+		final CategoryDTO category = categoryDao.findById(999L);
 		assertThat(category, is(nullValue()));
 	}
 
 	@Test
 	public void findCategoryByIdWithNullId() {
-		final Category category = categoryRepository.findById(null);
+		final CategoryDTO category = categoryDao.findById(null);
 		assertThat(category, is(nullValue()));
 	}
 
 	@Test
 	public void updateCategory() {
 		final Long categoryAddedId = dBCommandTransactionalExecutor.executeCommand(() -> {
-			return categoryRepository.add(java()).getId();
+			return categoryDao.add(java()).getId();
 		});
 
-		final Category categoryAfterAdd = categoryRepository.findById(categoryAddedId);
+		final CategoryDTO categoryAfterAdd = categoryDao.findById(categoryAddedId);
 		assertThat(categoryAfterAdd.getName(), is(equalTo(java().getName())));
 
 		categoryAfterAdd.setName(cleanCode().getName());
 		dBCommandTransactionalExecutor.executeCommand(() -> {
-			categoryRepository.update(categoryAfterAdd);
+			categoryDao.update(categoryAfterAdd);
 			return null;
 		});
 
-		final Category categoryAfterUpdate = categoryRepository.findById(categoryAddedId);
+		final CategoryDTO categoryAfterUpdate = categoryDao.findById(categoryAddedId);
 		assertThat(categoryAfterUpdate.getName(), is(equalTo(cleanCode().getName())));
 	}
 
 	@Test
 	public void findAllCategories() {
 		dBCommandTransactionalExecutor.executeCommand(() -> {
-			allCategories().forEach(categoryRepository::add);
+			allCategories().forEach(categoryDao::add);
 			return null;
 		});
 
-		final List<Category> categories = categoryRepository.findAll("name");
+		final List<CategoryDTO> categories = categoryDao.findAll("name");
 		assertThat(categories.size(), is(equalTo(4)));
 		assertThat(categories.get(0).getName(), is(equalTo(architecture().getName())));
 		assertThat(categories.get(1).getName(), is(equalTo(cleanCode().getName())));
@@ -97,38 +99,38 @@ public class CategoryRepositoryUTest {
 	@Test
 	public void alreadyExistsForAdd() {
 		dBCommandTransactionalExecutor.executeCommand(() -> {
-			categoryRepository.add(java());
+			categoryDao.add(java());
 			return null;
 		});
 
-		assertThat(categoryRepository.alreadyExists(java()), is(equalTo(true)));
-		assertThat(categoryRepository.alreadyExists(cleanCode()), is(equalTo(false)));
+		assertThat(categoryDao.alreadyExists(java()), is(equalTo(true)));
+		assertThat(categoryDao.alreadyExists(cleanCode()), is(equalTo(false)));
 	}
 
 	@Test
 	public void alreadyExistsCategoryWithId() {
-		final Category java = dBCommandTransactionalExecutor.executeCommand(() -> {
-			categoryRepository.add(cleanCode());
-			return categoryRepository.add(java());
+		final CategoryDTO java = dBCommandTransactionalExecutor.executeCommand(() -> {
+			categoryDao.add(cleanCode());
+			return categoryDao.add(java());
 		});
 
-		assertThat(categoryRepository.alreadyExists(java), is(equalTo(false)));
+		assertThat(categoryDao.alreadyExists(java), is(equalTo(false)));
 
 		java.setName(cleanCode().getName());
-		assertThat(categoryRepository.alreadyExists(java), is(equalTo(true)));
+		assertThat(categoryDao.alreadyExists(java), is(equalTo(true)));
 
 		java.setName(networks().getName());
-		assertThat(categoryRepository.alreadyExists(java), is(equalTo(false)));
+		assertThat(categoryDao.alreadyExists(java), is(equalTo(false)));
 	}
 
 	@Test
 	public void existsById() {
 		final Long categoryAddedId = dBCommandTransactionalExecutor.executeCommand(() -> {
-			return categoryRepository.add(java()).getId();
+			return categoryDao.add(java()).getId();
 		});
 
-		assertThat(categoryRepository.existsById(categoryAddedId), is(equalTo(true)));
-		assertThat(categoryRepository.existsById(999L), is(equalTo(false)));
+		assertThat(categoryDao.existsById(categoryAddedId), is(equalTo(true)));
+		assertThat(categoryDao.existsById(999L), is(equalTo(false)));
 	}
 
 }

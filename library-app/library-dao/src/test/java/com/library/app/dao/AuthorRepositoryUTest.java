@@ -1,37 +1,32 @@
-package com.library.app.author.repository;
+package com.library.app.dao;
 
-import static com.library.app.commontests.author.AuthorForTestsRepository.*;
+import static com.library.app.common.entities.AuthorDtoForDaoTest.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
-import com.library.app.author.model.Author;
-import com.library.app.author.model.filter.AuthorFilter;
-import com.library.app.common.model.PaginatedData;
-import com.library.app.common.model.filter.PaginationData;
-import com.library.app.common.model.filter.PaginationData.OrderMode;
-import com.library.app.commontests.utils.DBCommandTransactionalExecutor;
+import com.library.app.common.filtering.*;
+import com.library.app.common.filtering.PaginationData.OrderMode;
+import com.library.app.dao.impl.AuthorDaoImpl;
+import com.library.app.dto.AuthorDTO;
+import com.library.app.utils.DBCommandTransactionalExecutor;
 
 public class AuthorRepositoryUTest {
 	private EntityManagerFactory emf;
 	private EntityManager em;
 	private DBCommandTransactionalExecutor dbCommandExecutor;
-	private AuthorRepository authorRepository;
+	private AuthorDaoImpl authorDao;
 
 	@Before
 	public void initTestCase() {
 		emf = Persistence.createEntityManagerFactory("libraryPU");
 		em = emf.createEntityManager();
 
-		authorRepository = new AuthorRepository();
-		authorRepository.em = em;
+		authorDao = new AuthorDaoImpl();
+		authorDao.em = em;
 
 		dbCommandExecutor = new DBCommandTransactionalExecutor(em);
 	}
@@ -45,56 +40,56 @@ public class AuthorRepositoryUTest {
 	@Test
 	public void addAuthorAndFindIt() {
 		final Long authorAddedId = dbCommandExecutor.executeCommand(() -> {
-			return authorRepository.add(robertMartin()).getId();
+			return authorDao.add(robertMartin()).getId();
 		});
 		assertThat(authorAddedId, is(notNullValue()));
 
-		final Author author = authorRepository.findById(authorAddedId);
+		final AuthorDTO author = authorDao.findById(authorAddedId);
 		assertThat(author, is(notNullValue()));
 		assertThat(author.getName(), is(equalTo(robertMartin().getName())));
 	}
 
 	@Test
 	public void findAuthorByIdNotFound() {
-		final Author author = authorRepository.findById(999L);
+		final AuthorDTO author = authorDao.findById(999L);
 		assertThat(author, is(nullValue()));
 	}
 
 	@Test
 	public void updateAuthor() {
 		final Long authorAddedId = dbCommandExecutor.executeCommand(() -> {
-			return authorRepository.add(robertMartin()).getId();
+			return authorDao.add(robertMartin()).getId();
 		});
 		assertThat(authorAddedId, is(notNullValue()));
 
-		final Author author = authorRepository.findById(authorAddedId);
+		final AuthorDTO author = authorDao.findById(authorAddedId);
 		assertThat(author.getName(), is(equalTo(robertMartin().getName())));
 
 		author.setName("Uncle Bob");
 		dbCommandExecutor.executeCommand(() -> {
-			authorRepository.update(author);
+			authorDao.update(author);
 			return null;
 		});
 
-		final Author authorAfterUpdate = authorRepository.findById(authorAddedId);
+		final AuthorDTO authorAfterUpdate = authorDao.findById(authorAddedId);
 		assertThat(authorAfterUpdate.getName(), is(equalTo("Uncle Bob")));
 	}
 
 	@Test
 	public void existsById() {
 		final Long authorAddedId = dbCommandExecutor.executeCommand(() -> {
-			return authorRepository.add(robertMartin()).getId();
+			return authorDao.add(robertMartin()).getId();
 		});
 
-		assertThat(authorRepository.existsById(authorAddedId), is(equalTo(true)));
-		assertThat(authorRepository.existsById(999l), is(equalTo(false)));
+		assertThat(authorDao.existsById(authorAddedId), is(equalTo(true)));
+		assertThat(authorDao.existsById(999l), is(equalTo(false)));
 	}
 
 	@Test
 	public void findByFilterNoFilter() {
 		loadDataForFindByFilter();
 
-		final PaginatedData<Author> result = authorRepository.findByFilter(new AuthorFilter());
+		final PaginatedData<AuthorDTO> result = authorDao.findByFilter(new AuthorFilter());
 		assertThat(result.getNumberOfRows(), is(equalTo(4)));
 		assertThat(result.getRows().size(), is(equalTo(4)));
 		assertThat(result.getRow(0).getName(), is(equalTo(erichGamma().getName())));
@@ -111,14 +106,14 @@ public class AuthorRepositoryUTest {
 		authorFilter.setName("o");
 		authorFilter.setPaginationData(new PaginationData(0, 2, "name", OrderMode.DESCENDING));
 
-		PaginatedData<Author> result = authorRepository.findByFilter(authorFilter);
+		PaginatedData<AuthorDTO> result = authorDao.findByFilter(authorFilter);
 		assertThat(result.getNumberOfRows(), is(equalTo(3)));
 		assertThat(result.getRows().size(), is(equalTo(2)));
 		assertThat(result.getRow(0).getName(), is(equalTo(robertMartin().getName())));
 		assertThat(result.getRow(1).getName(), is(equalTo(martinFowler().getName())));
 
 		authorFilter.setPaginationData(new PaginationData(2, 2, "name", OrderMode.DESCENDING));
-		result = authorRepository.findByFilter(authorFilter);
+		result = authorDao.findByFilter(authorFilter);
 
 		assertThat(result.getNumberOfRows(), is(equalTo(3)));
 		assertThat(result.getRows().size(), is(equalTo(1)));
@@ -128,10 +123,10 @@ public class AuthorRepositoryUTest {
 
 	private void loadDataForFindByFilter() {
 		dbCommandExecutor.executeCommand(() -> {
-			authorRepository.add(robertMartin());
-			authorRepository.add(jamesGosling());
-			authorRepository.add(martinFowler());
-			authorRepository.add(erichGamma());
+			authorDao.add(robertMartin());
+			authorDao.add(jamesGosling());
+			authorDao.add(martinFowler());
+			authorDao.add(erichGamma());
 
 			return null;
 		});
