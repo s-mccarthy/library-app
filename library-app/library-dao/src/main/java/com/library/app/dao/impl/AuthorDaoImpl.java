@@ -19,9 +19,11 @@ public class AuthorDaoImpl implements AuthorDao {
 	public EntityManager em;
 
 	@Override
-	public AuthorDTO add(final AuthorDTO author) {
+	public AuthorDTO add(final AuthorDTO authorDto) {
+		Author author = new Author(authorDto);
 		em.persist(author);
-		return author;
+
+		return author.getAuthorDto();
 	}
 
 	@Override
@@ -31,11 +33,12 @@ public class AuthorDaoImpl implements AuthorDao {
 
 		Author author = em.find(Author.class, id);
 
-		return author.getAuthorDto();
+		return null == author ? null : author.getAuthorDto();
 	}
 
 	@Override
-	public void update(final AuthorDTO author) {
+	public void update(final AuthorDTO authorDto) {
+		Author author = new Author(authorDto);
 		em.merge(author);
 	}
 
@@ -71,13 +74,18 @@ public class AuthorDaoImpl implements AuthorDao {
 			queryAuthors.setMaxResults(filter.getPaginationData().getMaxResults());
 		}
 
-		final List<AuthorDTO> authors = queryAuthors.getResultList();
+		final List<Author> authors = queryAuthors.getResultList();
+
+		List<AuthorDTO> returnedAuthors = new ArrayList<>();
+		for (Author author : authors) {
+			returnedAuthors.add(author.getAuthorDto());
+		}
 
 		final Query queryCount = em.createQuery("Select Count(e) From Author e " + clause.toString());
 		applyQueryParametersOnQuery(queryParameters, queryCount);
 		final Integer count = ((Long) queryCount.getSingleResult()).intValue();
 
-		return new PaginatedData<AuthorDTO>(count, authors);
+		return new PaginatedData<AuthorDTO>(count, returnedAuthors);
 	}
 
 	private void applyQueryParametersOnQuery(final Map<String, Object> queryParameters, final Query query) {

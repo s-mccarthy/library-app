@@ -25,6 +25,8 @@ public class Author implements Serializable {
 	}
 
 	public Author(final AuthorDTO authorDto) {
+		if (null != authorDto.getId())
+			setId(authorDto.getId());
 		setName(authorDto.getName());
 	}
 
